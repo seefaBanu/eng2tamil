@@ -7,7 +7,6 @@ from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 import pickle
 import os
-import boto3  # Optional, for S3
 
 app = Flask(__name__)
 CORS(app, resources={r"/translate": {"origins": ["http://localhost:3000", "https://your-react-app-url"]}})  # Enable CORS for specific origins
@@ -156,7 +155,7 @@ class DecoderLayer(tf.keras.layers.Layer):
         out2 = self.layernorm2(attn2 + out1)
         ffn_output = self.ffn(out2)
         ffn_output = self.dropout3(ffn_output, training=training)
-        out3 = tf.keras.layers.LayerNormalization(epsilon=1e-6)(ffn_output + out2)
+        out3 = self.layernorm3(ffn_output + out2)
         return out3, attn_weights_block1, attn_weights_block2
 
 # Encoder
@@ -252,16 +251,8 @@ transformer(sample_input, sample_target, training=False,
             enc_padding_mask=enc_padding_mask, look_ahead_mask=combined_mask, dec_padding_mask=dec_padding_mask)
 print("Model built successfully.")
 
-# Load weights from S3 (optional) or local
+# Load the latest weights
 weights_path = os.path.join(checkpoint_path, 'transformer_epoch_140.weights.h5')
-if os.getenv('AWS_ACCESS_KEY') and os.getenv('AWS_SECRET_KEY'):
-    try:
-        s3 = boto3.client('s3', aws_access_key_id=os.getenv('AWS_ACCESS_KEY'), aws_secret_access_key=os.getenv('AWS_SECRET_KEY'))
-        s3.download_file('your-bucket', 'transformer_epoch_140.weights.h5', weights_path)
-        print("Weights downloaded from S3.")
-    except Exception as e:
-        print(f"Error downloading weights from S3: {e}")
-        raise
 
 try:
     transformer.load_weights(weights_path)
