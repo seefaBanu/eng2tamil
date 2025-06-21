@@ -2,12 +2,15 @@ import tensorflow as tf
 import numpy as np
 import pandas as pd
 from flask import Flask, request, jsonify
+from flask_cors import CORS  # Add CORS import
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 import pickle
 import os
+import boto3  # Optional, for S3
 
 app = Flask(__name__)
+CORS(app, resources={r"/translate": {"origins": ["http://localhost:3000", "https://your-react-app-url"]}})  # Enable CORS for specific origins
 
 # Model Parameters
 max_vocab_size = 10000
@@ -29,6 +32,8 @@ try:
         ta_tokenizer = pickle.load(f)
 except FileNotFoundError:
     print("Tokenizer files not found. Fitting new tokenizers using train2.csv.")
+    if not os.path.exists('train2.csv'):
+        raise FileNotFoundError("train2.csv not found for tokenizer fitting.")
     data = pd.read_csv('train2.csv')
     train_english = data['en'].astype(str).to_list()
     train_tamil = [f"<start> {sentence} <end>" for sentence in data['ta'].str.strip().to_list()]
@@ -151,7 +156,7 @@ class DecoderLayer(tf.keras.layers.Layer):
         out2 = self.layernorm2(attn2 + out1)
         ffn_output = self.ffn(out2)
         ffn_output = self.dropout3(ffn_output, training=training)
-        out3 = self.layernorm3(ffn_output + out2)
+        out3 = tf.keras.layers.LayerNormalization(epsilon=1e-6)(ffn_output + out2)
         return out3, attn_weights_block1, attn_weights_block2
 
 # Encoder
@@ -239,7 +244,7 @@ transformer = Transformer(
     pe_input=PE_INPUT, pe_target=PE_TARGET, rate=DROPOUT_RATE
 )
 
-# Build the model by passing sample data
+# Build the model
 sample_input = tf.zeros((1, MAX_LENGTH), dtype=tf.int32)
 sample_target = tf.zeros((1, MAX_LENGTH), dtype=tf.int32)
 enc_padding_mask, combined_mask, dec_padding_mask = create_masks(sample_input, sample_target)
@@ -247,8 +252,17 @@ transformer(sample_input, sample_target, training=False,
             enc_padding_mask=enc_padding_mask, look_ahead_mask=combined_mask, dec_padding_mask=dec_padding_mask)
 print("Model built successfully.")
 
-# Load the latest weights
-weights_path = os.path.join(checkpoint_path, 'transformer_epoch_50.weights.h5')
+# Load weights from S3 (optional) or local
+weights_path = os.path.join(checkpoint_path, 'transformer_epoch_140.weights.h5')
+if os.getenv('AWS_ACCESS_KEY') and os.getenv('AWS_SECRET_KEY'):
+    try:
+        s3 = boto3.client('s3', aws_access_key_id=os.getenv('AWS_ACCESS_KEY'), aws_secret_access_key=os.getenv('AWS_SECRET_KEY'))
+        s3.download_file('your-bucket', 'transformer_epoch_140.weights.h5', weights_path)
+        print("Weights downloaded from S3.")
+    except Exception as e:
+        print(f"Error downloading weights from S3: {e}")
+        raise
+
 try:
     transformer.load_weights(weights_path)
     print(f"Loaded weights from {weights_path}")
