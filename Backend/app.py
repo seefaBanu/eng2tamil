@@ -252,7 +252,7 @@ transformer(sample_input, sample_target, training=False,
 print("Model built successfully.")
 
 # Load the latest weights
-weights_path = os.path.join(checkpoint_path, 'transformer_epoch_140.weights.h5')
+weights_path = os.path.join(checkpoint_path, 'transformer_epoch_470.weights.h5')
 
 try:
     transformer.load_weights(weights_path)
