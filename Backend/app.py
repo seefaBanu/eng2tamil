@@ -9,7 +9,7 @@ import pickle
 import os
 
 app = Flask(__name__)
-CORS(app, resources={r"/translate": {"origins": ["http://localhost:3000", "https://your-react-app-url"]}})  # Enable CORS for specific origins
+CORS(app, resources={r"/translate": {"origins": ["http://localhost:3000", "https://eng2tam.netlify.app/"]}})  # Enable CORS for specific origins
 
 # Model Parameters
 max_vocab_size = 10000
