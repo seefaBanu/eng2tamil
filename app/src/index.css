@@ -1,6 +1,7 @@
 body {
   font-family: sans-serif;
-  background: #f7f3f2;
+  background-color: #fdfcfc;
+  background-image: 'bg.jpg';
   padding: 40px;
   text-align: center;
 }

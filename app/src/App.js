@@ -7,6 +7,15 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const exampleSentences = [
+    "",
+    "He is practicing yoga every morning",
+    "I need to buy a gift",
+    "He plays cricket with his friends",
+    "This is a beautiful day.",
+    "He helps his mother in the kitchen"
+  ];
+
   const API_URL =
     process.env.REACT_APP_API_URL ||
     "https://eng2tamil-production.up.railway.app/translate";
@@ -82,49 +91,97 @@ function App() {
   return (
     <div className="App">
       <h1>English to Tamil Translator</h1>
-      <textarea
-        rows="4"
-        cols="50"
-        placeholder="Enter English text here..."
-        value={inputText}
-        onChange={(e) => setInputText(e.target.value)}
-        disabled={loading}
-        style={{ resize: "vertical", fontSize: "1em", padding: "10px" }}
-      />
-      <br />
-      <button
-        onClick={handleTranslate}
-        disabled={loading || !inputText.trim()}
+      <div
         style={{
-          padding: "10px 20px",
-          fontSize: "1em",
-          cursor: loading || !inputText.trim() ? "not-allowed" : "pointer",
-          backgroundColor: loading || !inputText.trim() ? "#ccc" : "#007bff",
-          color: "white",
-          border: "none",
-          borderRadius: "5px",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "5px",
+          marginBottom: "5px",
         }}
       >
-        {loading ? "Translating..." : "Translate"}
-      </button>
-      {error && <p style={{ color: "red", marginTop: "10px" }}>{error}</p>}
-      {translation && (
-        <>
-          <h2>Filtered Translation Output:</h2>
-          <pre
-            style={{
-              fontSize: "1.2em",
-              color: "#444",
-              background: "#f9f9f9",
-              padding: "10px",
-              borderRadius: "5px",
-              whiteSpace: "pre-wrap",
-            }}
-          >
-            {translation}
-          </pre>
-        </>
-      )}
+        {/* Dropdown */}
+        <select
+          value={inputText}
+          onChange={(e) => setInputText(e.target.value)}
+          disabled={loading}
+          style={{
+            padding: "10px",
+            fontSize: "1em",
+            width: "80%",
+            maxWidth: "620px",
+            borderRadius: "5px",
+            border: "1px solid #ccc",
+            backgroundColor: "#fff",
+            cursor: loading ? "not-allowed" : "pointer",
+            color: "gray",
+          }}
+        >
+          {exampleSentences.map((sentence, idx) => (
+            <option key={idx} value={sentence}>
+              {sentence || "-- Select an example sentence --"}
+            </option>
+          ))}
+        </select>
+
+        {/* Textarea */}
+        <textarea
+          rows="4"
+          cols="50"
+          placeholder="Enter English text here..."
+          value={inputText}
+          onChange={(e) => setInputText(e.target.value)}
+          disabled={loading}
+          style={{
+            resize: "vertical",
+            fontSize: "1em",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "600px",
+            borderRadius: "5px",
+            border: "1px solid #ccc",
+          }}
+        />
+
+        <br />
+        <button
+          onClick={handleTranslate}
+          disabled={loading || !inputText.trim()}
+          style={{
+            padding: "10px 10px",
+            fontSize: "1em",
+            cursor: loading || !inputText.trim() ? "not-allowed" : "pointer",
+            backgroundColor: loading || !inputText.trim() ? "#ccc" : "#007bff",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+          }}
+        >
+          {loading ? "Translating..." : "Translate"}
+        </button>
+        {error && <p style={{ color: "red", marginTop: "10px" }}>{error}</p>}
+        {translation && (
+          <>
+            <pre
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                fontSize: "1.2em",
+                color: "#444",
+                background: "#a9f9f9",
+                padding: "10px",
+                width: "620px",
+                borderRadius: "5px",
+                alignItems: "center",
+                whiteSpace: "pre-wrap",
+              }}
+            >
+              {translation}
+            </pre>
+          </>
+        )}
+      </div>
     </div>
   );
 }
